@@ -9,7 +9,7 @@ __copyright__ = 'Copyright 2017, Evan Young'
 __credits__ = 'Evan Young'
 
 __license__ = 'GNU GPLv3'
-__version__ = '0.1.0'
+__version__ = '0.2.0'
 __maintainer__ = 'Evan Young'
 __status__ = 'Beta'
 
@@ -19,8 +19,8 @@ class account:
       """Makes a new account object
 
       Arguments:
-         username  {str} -- The username
-         password  {str} -- The password
+         username {str} -- The username
+         password {str} -- The password
       """
       self.username = username
       self.password = password
@@ -30,8 +30,9 @@ class account:
       self.user = self.getUser()
       self.enrollment = self.getEnrollment()
       self.courses = self.getCourses()
-      self.prettycourses = self.getPrettyCourses()
-      self.prettyterms = self.getPrettyTerms()
+      self.prettyCourses = self.getprettyCourses()
+      self.prettyTerms = self.getprettyTerms()
+      self.grades = self.getGrades()
 
    def getAuth(self):
       """Gets the authorization token
@@ -102,24 +103,25 @@ class account:
          raise RuntimeError("invalid token")
       return res
 
-   def getPrettyCourses(self):
+   def getprettyCourses(self):
       """Converts the courses object to a prettier format
       """
-      ret = []
+      ret = {}
       for c in self.courses:
-         gr = {}
-         gr["course"] = c["Course"]
-         gr["abbr"] = c["AbbreviatedTitle"]
-         gr["teacher"] = {
-            "name": c["TeacherName"],
-            "title": c["Teacher"],
-            "email": c["TeacherEmail"]
+         gr = {
+            "course": c["Course"],
+            "abbr": c["AbbreviatedTitle"],
+            "teacher": {
+               "name": c["TeacherName"],
+               "title": c["Teacher"],
+               "email": c["TeacherEmail"]
+            },
+            "school": c["SchoolName"].title(),
+            "period": c["StartPeriod"],
+            "tardies": c["Tardies"],
+            "absences": c["Absences"],
+            "grades": {},
          }
-         gr["school"] = c["SchoolName"].title()
-         gr["period"] = c["StartPeriod"]
-         gr["tardies"] = c["Tardies"]
-         gr["absences"] = c["Absences"]
-         gr["grades"] = {}
 
          for t in c["ReportCardGradesTerms"]:
             gr["grades"][t["GradingTerm"]] = {}
@@ -129,10 +131,10 @@ class account:
                gr["grades"][t["GradingTerm"]]["percent"] = 0
             gr["grades"][t["GradingTerm"]]["letter"] = t["Grade"]
 
-         ret.append(gr)
+         ret[c["$id"]] = gr
       return ret
 
-   def getPrettyTerms(self):
+   def getprettyTerms(self):
       """Converts the courses object's terms' times to a prettier format
       """
       now = datetime.now()
@@ -149,4 +151,25 @@ class account:
                      self.curTerm = t["ShortDescription"]
                   else:
                      self.curSem = t["ShortDescription"]
+      return ret
+
+   def getGrades(self, period="curTerm"):
+      """Gets the current grades
+
+      Keyword Arguments:
+         period {str} -- The period for grades (default: {"curTerm"})
+      """
+      ret = {}
+      period = getattr(self, period)
+      for c in self.prettyCourses:
+         gr = {
+            "course": self.prettyCourses[c]["course"],
+            "abbr": self.prettyCourses[c]["abbr"]
+         }
+         if(period in self.prettyCourses[c]["grades"]):
+            gr["grade"] = self.prettyCourses[c]["grades"][period]
+         else:
+            gr["grade"] = {"percent":0,"letter":""}
+         ret[c] = gr
+
       return ret
