@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
+"""Gets gradebook information
 """
-Gets gradebook information
-Takes 6 seconds (AVG/50)
-"""
-
 import requests
-import datetime
+from datetime import datetime
+
+__author__ = 'Evan Young'
+__copyright__ = 'Copyright 2017, Evan Young'
+__credits__ = 'Evan Young'
+
+__license__ = 'GNU GPLv3'
+__version__ = '0.1.0'
+__maintainer__ = 'Evan Young'
+__status__ = 'Beta'
+
 
 class account:
    def __init__(self, username, password):
@@ -128,14 +135,14 @@ class account:
    def getPrettyTerms(self):
       """Converts the courses object's terms' times to a prettier format
       """
-      now = datetime.datetime.now()
+      now = datetime.now()
       ret = {}
       for c in self.courses:
          for t in c["CourseTerms"]:
             if(t["ShortDescription"] not in ret):
                ret[t["ShortDescription"]] = {
-                  "start": datetime.datetime.strptime(t["StartDate"], "%Y-%m-%dT%H:%M:%S"),
-                  "end": datetime.datetime.strptime(t["EndDate"], "%Y-%m-%dT%H:%M:%S")
+                  "start": datetime.strptime(t["StartDate"], "%Y-%m-%dT%H:%M:%S"),
+                  "end": datetime.strptime(t["EndDate"], "%Y-%m-%dT%H:%M:%S")
                }
                if(now >= ret[t["ShortDescription"]]["start"] and now <= ret[t["ShortDescription"]]["end"]):
                   if(t["ShortDescription"][0] == "T"):
