@@ -3,27 +3,30 @@
 """
 import requests
 from datetime import datetime
+from re import search as regsearch
 
 __author__ = 'Evan Young'
 __copyright__ = 'Copyright 2017, Evan Young'
 __credits__ = 'Evan Young'
 
 __license__ = 'GNU GPLv3'
-__version__ = '0.2.0'
+__version__ = '0.3.0'
 __maintainer__ = 'Evan Young'
 __status__ = 'Beta'
 
 
 class account:
-   def __init__(self, username, password):
+   def __init__(self, username, password, site):
       """Makes a new account object
 
       Arguments:
          username {str} -- The username
          password {str} -- The password
+         site     {str} -- The home site
       """
       self.username = username
       self.password = password
+      self.site = site
 
       self.auth = self.getAuth()
       self.head = self.getHead()
@@ -44,7 +47,7 @@ class account:
          "scope": 3
       }
 
-      res = requests.post("https://sdm.sisk12.com/VP360/token", data=data).json()
+      res = requests.post(f"{self.site}/token", data=data).json()
       if("error" in res):
          raise RuntimeError("invalid credentials")
       ret = {"token":res["access_token"],"type":res["token_type"]}
@@ -59,8 +62,8 @@ class account:
          "Accept-Language": "en-GB,en;q=0.9",
          "Authorization": f"{self.auth['type'].title()} {self.auth['token']}",
          "Connection": "keep-alive",
-         "Host": "sdm.sisk12.com",
-         "Referer": "https://sdm.sisk12.com/VP360/apphost/TylerSis",
+         "Host": regsearch("(?<=https://).*(?=/)", self.site)[0],
+         "Referer": f"{self.site}/apphost/TylerSis",
          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36"
       }
       return head
@@ -68,7 +71,7 @@ class account:
    def getUser(self):
       """Gets the basic user account information
       """
-      res = requests.get("https://sdm.sisk12.com/VP360/AppApi/TylerSis/Student/GetUser", headers=self.head).json()
+      res = requests.get(f"{self.site}/AppApi/TylerSis/Student/GetUser", headers=self.head).json()
       if("error" in res):
          raise RuntimeError("invalid token")
       return res
@@ -80,7 +83,7 @@ class account:
          "studentId": {self.user['StudentId']},
          "academicYearId": {self.user['LoginYearId']}
       }
-      res = requests.get(f"https://sdm.sisk12.com/VP360/AppApi/TylerSis/Student/GetStudentEnrollment", params=params, headers=self.head).json()
+      res = requests.get(f"{self.site}/AppApi/TylerSis/Student/GetStudentEnrollment", params=params, headers=self.head).json()
       if("error" in res):
          raise RuntimeError("invalid token")
       return res
@@ -98,7 +101,7 @@ class account:
          "userid": self.user["Id"],
          "includeDropped": "undefined"
       }
-      res = requests.get("https://sdm.sisk12.com/VP360/AppApi/TylerSis/Student/GetStudentSchedule", params=params, headers=self.head).json()
+      res = requests.get(f"{self.site}/AppApi/TylerSis/Student/GetStudentSchedule", params=params, headers=self.head).json()
       if("error" in res):
          raise RuntimeError("invalid token")
       return res

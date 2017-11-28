@@ -3,7 +3,7 @@ from distutils.core import setup
 setup(
    name = 'sisk-py',
    packages = ['sisk'],
-   version = '0.2.0',
+   version = '0.3.0',
    description = 'A SISK12 API for Tyler Systems',
    author = 'Evan Young',
    url = 'https://github.com/DocCodes/sisk-py',
